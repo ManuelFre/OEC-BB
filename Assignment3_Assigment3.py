@@ -90,10 +90,10 @@ def program():
 
     # Start a Server
 
-    # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    # sock.bind(('', 9000))
-    # sock.listen(100000)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind(('', 9000))
+    sock.listen(100000)
 
     # Start a Server
 
@@ -111,18 +111,18 @@ def program():
 
         # Check if Server exists
 
-        # rasperryIPsInSubnet = []
-        # for ip in currentIPAddressesInSubnet:
-        #     try:
-        #         cli_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #         cli_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        #         cli_sock.connect((ip, 9000))
-        #         rasperryIPsInSubnet.append(ip)
-        #         cli_sock.shutdown(socket.SHUT_RDWR)
-        #         cli_sock.close()
-        #     except Exception:
-        #         cli_sock.close()
-        # currentIPAddressesInSubnet = rasperryIPsInSubnet
+        rasperryIPsInSubnet = []
+        for ip in currentIPAddressesInSubnet:
+            try:
+                cli_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                cli_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                cli_sock.connect((ip, 9000))
+                rasperryIPsInSubnet.append(ip)
+                cli_sock.shutdown(socket.SHUT_RDWR)
+                cli_sock.close()
+            except Exception:
+                cli_sock.close()
+        currentIPAddressesInSubnet = rasperryIPsInSubnet
 
         # Check if Server exists
 
