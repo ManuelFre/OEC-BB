@@ -72,9 +72,9 @@ ip_net = ipaddress.ip_network("192.168.0.0/24")
 all_hosts = list(ip_net.hosts())
 
 # Configure subprocess to hide the console window
-info = subprocess.STARTUPINFO()
-info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-info.wShowWindow = subprocess.SW_HIDE
+# info = subprocess.STARTUPINFO()
+# info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+# info.wShowWindow = subprocess.SW_HIDE
 
 
 # Split Pings into threads
