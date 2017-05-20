@@ -1,80 +1,64 @@
 import time
 from tkinter import *
-
-# Create the GUI
-fenster = Tk()
-fenster.title("Assignment3")
-fenster.geometry("500x550")
-group = Label(fenster, text="Group: Bind Gerald, Leibrecht Markus, Zachner Roman",)
-group.pack()
-description = Label(fenster, text="Description: Each device(Pi) in the Network will be listed here!\n"
-                                  "If a device(Pi) entry or loss the list will be changed!\n"
-                                  "There is also a master election under the devices(Pi's)!\n"
-                                  "Communication exists throw Network Ping's!\n",)
-description.pack()
-master = StringVar()
-Label(fenster, textvariable=master).pack()
-master.set("Master: ")
-ipAddressListbox = Listbox(fenster, width=70, height=20)
-ipAddressListbox.pack()
+from operator import itemgetter
 
 
+class MainWindow(object):
+    def __init__(self, server_start_func, client_search_func):
+        self.server_start_func = server_start_func
+        self.client_search_func = client_search_func
+        self._create_window()
 
-def update_list_box():
-    ipAddressListbox.delete(0, END)
-    i = 0
-    for ip in currentIPAddressesInSubnet:
-        if i > 0:
-            ipAddressListbox.insert(END, "Rank " + str(i) + ":          " + ip)
-        i += 1
+    def _create_window(self):
+        self.main_window = Tk()
+        self.main_window.title("Assignment3")
+        self.main_window.geometry("500x550")
+        group = Label(self.main_window, text="Group: Bind Gerald, Leibrecht Markus, Zachner Roman",)
+        group.pack()
+        description = Label(self.main_window, text="Description: Each device(Pi) in the Network will be listed here!\n"
+                                          "If a device(Pi) entry or loss the list will be changed!\n"
+                                          "There is also a master election under the devices(Pi's)!\n"
+                                          "Communication exists throw Network Ping's!\n",)
+        description.pack()
+        self.master = StringVar()
+        Label(self.main_window, textvariable=self.master).pack()
+        self.master.set("Master: ")
+        self.ip_address_list_box = Listbox(self.main_window, width=70, height=20)
+        self.ip_address_list_box.pack()
+
+        self.startBtn = Button(self.main_window, text="Start", command=self.client_search_func)
+        self.startBtn.pack()
+
+        self.state = StringVar()
+        Label(self.main_window, textvariable=self.state).pack()
+
+    def show(self):
+        mainloop()
+
+    def update_list_box(self, list_of_ip_addresses):
+        self.ip_address_list_box.delete(0, END)
+        for idx, ip in enumerate(list_of_ip_addresses):
+            # TODO: String formatting
+            self.ip_address_list_box.insert(END, "Rank " + str(idx) + ":          " + ip)
+
+    def update_master(self, master_ip_addr=None):
+        self.master.set("Master: {}".format(master_ip_addr or ''))
+
+    def make_state_active(self, stateMessage, time_to_show=3):
+        self.state.set(stateMessage)
+        time.sleep(time_to_show)
+        self.state.set("")
+
+    def update_window_by_ip_list(self, list_of_peer_ips):
+
+        list_for_sorting = []
+        for ip_addr in list_of_peer_ips:
+            list_for_sorting.append((int(ip_addr.split('.')[3]), ip_addr))
+        list_for_sorting.sort(key=itemgetter(0), reverse=True)
+        temp_list = [ip_addr[1] for ip_addr in list_for_sorting]
+        self.update_list_box(temp_list[1:])  # skip first element
+        self.update_master(temp_list[0])  # first entry only
+        # show_state(oldIPAddressesInSubnet, currentIPAddressesInSubnet)  # moved to main
+        print("Actuelly list of IPs in the Network: " + str(temp_list))
 
 
-def update_master():
-    master.set("Master: ")
-    if currentIPAddressesInSubnet.__len__() >= 1:
-        master.set("Master: " + currentIPAddressesInSubnet[0])
-
-
-def make_state_active(stateMessage):
-    state.set(stateMessage)
-    time.sleep(3)
-    state.set("")
-
-
-list_for_sorting = []
-for ip in currentIPAddressesInSubnet:
-    list_for_sorting.append((int(ip.split('.')[3]), ip))
-list_for_sorting.sort(key=itemgetter(0), reverse=True)
-currentIPAddressesInSubnet.clear()
-for ip in list_for_sorting:
-    currentIPAddressesInSubnet.append(ip[1])
-update_list_box()
-update_master()
-show_state(oldIPAddressesInSubnet, currentIPAddressesInSubnet)
-print("Actuelly list of IPs in the Network: " + str(currentIPAddressesInSubnet))
-
-
-def show_state(oldIPAddressesInSubnet, currentIPAddressesInSubnet):
-    stateMessage = ""
-    if len(oldIPAddressesInSubnet) == 0 and len(currentIPAddressesInSubnet) > 0:
-        stateMessage += "One or more devices(Pi's) associated to the Network!\n"
-        stateMessage += "New Master is elected!"
-    else:
-        if len(oldIPAddressesInSubnet) < len(currentIPAddressesInSubnet):
-            stateMessage += "One or more devices(Pi's) associated to the Network!\n"
-        if len(oldIPAddressesInSubnet) > len(currentIPAddressesInSubnet):
-            stateMessage += "One or more devices(Pi's) exit the Network!\n"
-        if len(oldIPAddressesInSubnet) != 0 and len(currentIPAddressesInSubnet) != 0 and oldIPAddressesInSubnet[0] != currentIPAddressesInSubnet[0]:
-            stateMessage += "New Master is elected!"
-    threading.Thread(target=make_state_active, args=(stateMessage,)).start()
-
-
-
-
-startBtn = Button(fenster, text="Start", command=start_program)
-startBtn.pack()
-
-state = StringVar()
-Label(fenster, textvariable=state).pack()
-
-mainloop()
