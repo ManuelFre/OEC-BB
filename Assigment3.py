@@ -3,7 +3,7 @@
 from Communication.networking import Com
 from GUI.gui import MainWindow
 
-# This Code is Created by Roman Zachner
+# TODO: Proper master election
 
 
 def main():
