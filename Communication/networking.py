@@ -61,10 +61,11 @@ class Com(object):
         for i in range(start, stop):
 
             # TODO: Das muss schöner werden! subprocess verursacht krebs
-            output = subprocess.Popen(['ping', '-n', '1', '-w', '500', str(self.all_hosts[i])],
-                                      stdout=subprocess.PIPE, startupinfo=None).communicate()[0]
-            if "Empfangen = 1" in output.decode('gb2312', errors='ignore'):
+            output = subprocess.Popen(['ping', '-c', '2', '-w', '1', str(self.all_hosts[i])],
+                                      stdout=subprocess.PIPE).communicate()
+            if output[0].decode("utf-8").find("64 bytes from") > 0:
                 self.live_hosts.append(str(self.all_hosts[i]))
+
 
     def _try_handshake(self):
         for ip_addr in self.live_hosts:
