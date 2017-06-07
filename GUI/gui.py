@@ -1,5 +1,6 @@
 import time
 from tkinter import *
+from tkinter import messagebox
 from operator import itemgetter
 
 
@@ -7,33 +8,41 @@ class MainWindow(object):
     def __init__(self, server_start_func, client_search_func):
         self.server_start_func = server_start_func
         self.client_search_func = client_search_func
-        self._create_window()
+        self.main_window = self._create_window()
 
     def _create_window(self):
-        self.main_window = Tk()
-        self.main_window.title("Assignment3")
-        self.main_window.geometry("500x550")
-        group = Label(self.main_window, text="Group: Bind Gerald, Leibrecht Markus, Zachner Roman",)
+        main_window = Tk()
+        main_window.title("Assignment3")
+        main_window.geometry("500x550")
+        group = Label(main_window, text="Group: Bind Gerald, Leibrecht Markus, Zachner Roman",)
         group.pack()
-        description = Label(self.main_window, text="Description: Each device(Pi) in the Network will be listed here!\n"
+        description = Label(main_window, text="Description: Each device(Pi) in the Network will be listed here!\n"
                                           "If a device(Pi) entry or loss the list will be changed!\n"
                                           "There is also a master election under the devices(Pi's)!\n"
                                           "Communication exists throw Network Ping's!\n",)
         description.pack()
         self.master = StringVar()
-        Label(self.main_window, textvariable=self.master).pack()
+        Label(main_window, textvariable=self.master).pack()
         self.master.set("Master: ")
-        self.ip_address_list_box = Listbox(self.main_window, width=70, height=20)
+        self.ip_address_list_box = Listbox(main_window, width=70, height=20)
         self.ip_address_list_box.pack()
 
-        self.startBtn = Button(self.main_window, text="Start", command=self.client_search_func)
+        self.startBtn = Button(main_window, text="Start", command=self.client_search_func)
         self.startBtn.pack()
 
         self.state = StringVar()
-        Label(self.main_window, textvariable=self.state).pack()
+        Label(main_window, textvariable=self.state).pack()
+        main_window.protocol("WM_DELETE_WINDOW", self._on_closing)
+
+        return main_window
 
     def show(self):
-        mainloop()
+        self.main_window.mainloop()
+
+
+    def _on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            self.main_window.destroy()
 
     def update_list_box(self, list_of_ip_addresses):
         self.ip_address_list_box.delete(0, END)

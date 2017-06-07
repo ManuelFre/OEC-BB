@@ -11,7 +11,9 @@ def main():
     com.start_server()
     com.start_client_search()
     window = MainWindow(client_search_func=com.start_client_search, server_start_func=None)
+    
     window.show()
+    com.stop_client_search()
 
 # determenig what to display and why shut not be part of the gui. it shut happen here
 # def show_state(oldIPAddressesInSubnet, currentIPAddressesInSubnet):

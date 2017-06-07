@@ -2,9 +2,12 @@ import subprocess
 import ipaddress
 import threading
 import socket
+import os
+import broadcast
 
 
-DEFAULT_SERVER_PORT = 9000
+
+DEFAULT_APPLICATION_PORT = 48881
 RASPBERRY_WIFI_INTERFACE = "wlan0"
 
 
@@ -12,12 +15,8 @@ class Com(object):
     def __init__(self, port=DEFAULT_SERVER_PORT):
         self.port = port
 
-        self.ip_net = ipaddress.ip_network("192.168.0.0/24")  # TODO: Make dynamic: see http://stackoverflow.com/a/936536
-        self.all_hosts = list(self.ip_net.hosts()) # Get all potential hosts on that network
-        self.live_hosts = []  # we don't know jet which host are alive
-        self.peer_hosts = []  # we don't know jet which host are running the same software
-
         self._server_thread = None
+        self._server_socket = None
 
         self._client_threads = []  # formally threads = []
 
@@ -26,65 +25,26 @@ class Com(object):
         # TODO: mach was mit anfragen
 
     def _bind_port(self):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind(('', self.port))
-        sock.listen(5)
+        self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self._server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self._server_socket.bind(('', self.port))
+            
 
     def start_client_search(self):
-        self._server_thread = threading.Thread(target=self._monitor_current_subnet_for_peers)
+        print('Start listening service ...')
+        self._server_thread = threading.Thread(target=self._listen_for_broadcasts)
         self._server_thread.start()
 
     def stop_client_search(self):
         self._server_thread.join()
 
-    def _ping_subnet(self):
 
-        # TODO umschreiben, dass nicht immer die ganze liste gelösht und wieder befüllt werden muss
-        # Immer einen host nach dem anderen updaten und dessen state ändern oder so
-        self.live_hosts = []
-        for n in range(0, len(self.all_hosts), 5):
-            stop = n + 5 if n + 5 <= len(self.all_hosts) else len(self.all_hosts)
-            t = threading.Thread(target=self.ping_hosts, args=(n, stop))
-            self._client_threads.append(t)
-            t.start()
-        for thread in self._client_threads:
-            thread.join()
-
-    def ping_hosts(self, start, stop):
-        """
-        Pings the ip addresses in the sequence from :param start to :param stop and
-         adds all live hosts to self.live_hosts
-        :param start: lower sequence limiter
-        :param stop: upper sequence limiter
-        """
-        for i in range(start, stop):
-
-            # TODO: Das muss schöner werden! subprocess verursacht krebs
-            output = subprocess.Popen(['ping', '-c', '2', '-w', '1', str(self.all_hosts[i])],
-                                      stdout=subprocess.PIPE).communicate()
-            if output[0].decode("utf-8").find("64 bytes from") > 0:
-                self.live_hosts.append(str(self.all_hosts[i]))
-
-
-    def _try_handshake(self):
-        for ip_addr in self.live_hosts:
-            try:
-                cli_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                cli_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                cli_sock.connect((ip_addr, self.port))
-                # TODO: hier muss eine echte Komm mit dem Server stattfinden
-                # nur so kann man sich sicher sein, dass nicht nur zufällig der Port offen ist
-                self.peer_hosts.append(ip_addr)
-                cli_sock.shutdown(socket.SHUT_RDWR)
-                cli_sock.close()
-            except Exception as exc:
-                print(exc)
-
-    def _monitor_current_subnet_for_peers(self):
-        while True:
-            self._ping_subnet()
-            self._try_handshake()
+    def _listen_for_broadcasts(self):
+        t = getattr(self, "_server_thread")
+        while getattr(t, "do_run", True):
+            message , address = my_socket.recvfrom(512)
+            print('message (%s) from : %s' % ( str(message), address[0]))
 
 
 
