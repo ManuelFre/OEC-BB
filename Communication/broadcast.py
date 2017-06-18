@@ -7,6 +7,9 @@ class SubnetBroadcaster(object):
         self.listener_port = listener_port
         self.GOODBYE_MSG = goodbye_msg
 
+        if not getattr(self, 'broadcast_socket', None):
+            self.__enter__()
+
     def __enter__(self):
         self._make_broadcast_socket()
         return self
@@ -21,13 +24,13 @@ class SubnetBroadcaster(object):
     def _destroy_broadcast_socket(self):
         self.broadcast_socket.close()
 
-    def sent(self, msg):
+    def send(self, msg):
         target = ('<broadcast>', self.listener_port)
         self.broadcast_socket.sendto(msg.encode(), target)
 
-    def sent_goodbye_msg(self):
-        self.sent(self.GOODBYE_MSG)
+    def send_goodbye_msg(self):
+        self.send(self.GOODBYE_MSG)
 
 
 # with SubnetBroadcaster(48881, ) as c:
-#     c.sent("TEST")
+#     c.send("TEST")

@@ -60,15 +60,7 @@ class MainWindow(object):
         self.state.set("")
 
     def update_window_by_ip_list(self, list_of_peer_ips):
-
-        list_for_sorting = []
-        for ip_addr in list_of_peer_ips:
-            list_for_sorting.append((int(ip_addr.split('.')[3]), ip_addr))
-        list_for_sorting.sort(key=itemgetter(0), reverse=True)
-        temp_list = [ip_addr[1] for ip_addr in list_for_sorting]
-        self.update_list_box(temp_list[1:])  # skip first element
-        self.update_master(temp_list[0])  # first entry only
-        # show_state(oldIPAddressesInSubnet, currentIPAddressesInSubnet)  # moved to main
-        print("Actuelly list of IPs in the Network: " + str(temp_list))
+        self.update_list_box(list_of_peer_ips)
+        print("Actuelly list of IPs in the Network: " + str(list_of_peer_ips))
 
 

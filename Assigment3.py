@@ -3,6 +3,7 @@
 from Communication.listen import MessageRCV
 from Communication.broadcast import SubnetBroadcaster
 from GUI.gui import MainWindow
+from MasterElection.default import hold_master_election
 
 # TODO: Proper master election
 
@@ -14,13 +15,16 @@ from GUI.gui import MainWindow
 
 
 DEFAULT_APPLICATION_PORT = 48881
+HELLO_MSG = '@hello_sexy_lady@'
 GOODBYE_MSG = '@quit'
 RASPBERRY_WIFI_INTERFACE = "wlan0"
+MASTERELECTION = 'default'
 
 
 rcv = None
 snd = None
 window = None
+know_network_nodes = []
 
 
 def main():
@@ -30,7 +34,6 @@ def main():
     snd = SubnetBroadcaster(DEFAULT_APPLICATION_PORT, GOODBYE_MSG)
     snd._make_broadcast_socket()
     rcv = MessageRCV(process_incomming_message, DEFAULT_APPLICATION_PORT)
-    rcv.start_server()
     window = MainWindow(client_search_callback=rcv.start_listening, server_start_callback=None, app_close_callback=handle_app_close_cmd)
     
     window.show()
@@ -56,22 +59,55 @@ def handle_app_close_cmd():
     print("Trying to shut shit down")
     global rcv
     global snd
-    rcv.stop_listening()
-    snd.sent_goodbye_msg()
+
+
+    snd.send_goodbye_msg()
     snd._destroy_broadcast_socket()
-    rcv.stop_server()
+    rcv.stop_listening()
+
+
+def update_peers(action, addr):
+    ip, port = addr
+    print('known:')
+    print(know_network_nodes)
+    if action.lower() == 'add':
+        if addr not in know_network_nodes:
+            print("Node '{}' joined!".format(addr[0]))
+            know_network_nodes.append(addr)
+
+    if action.lower() == 'remove':
+        if addr in know_network_nodes:
+            print("Node '{}' left!".format(addr[0]))
+            know_network_nodes.remove(addr)
+
+
+def update_peers_and_inform_gui(action, addr):
+    global window
+    update_peers(action, addr)
+    master_addr = hold_master_election(know_network_nodes)
+    master_ip = master_addr[0]
+    node_ips = [node_addr[0] for node_addr in know_network_nodes]
+    window.update_window_by_ip_list(node_ips)
+    window.update_master(master_ip)
+
 
 
 def process_incomming_message(msg, addr):
+    global window
+    if msg != GOODBYE_MSG:
+        update_peers_and_inform_gui('add', addr)
+    else:
+        update_peers_and_inform_gui('remove', addr)
+
+    print(','.join([str(e) for e in addr]))
     full_str = msg + ' from: ' + addr[0]
     print(full_str)
     window.make_state_active(full_str)
 
 
+
 if __name__ == '__main__':  # execute this if this file is called from cli
     print('Let\'s do this.')
     main()
-    global rcv
-    print(rcv._server_thread.isAlive())
 
 
