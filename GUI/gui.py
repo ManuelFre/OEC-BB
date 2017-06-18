@@ -5,21 +5,22 @@ from operator import itemgetter
 
 
 class MainWindow(object):
-    def __init__(self, server_start_func, client_search_func):
-        self.server_start_func = server_start_func
-        self.client_search_func = client_search_func
+    def __init__(self, server_start_callback, client_search_callback, app_close_callback):
+        # callback functions 
+        self.server_start_callback = server_start_callback
+        self.client_search_callback = client_search_callback
+        self.app_close_callback = app_close_callback
         self.main_window = self._create_window()
 
     def _create_window(self):
         main_window = Tk()
         main_window.title("Assignment3")
         main_window.geometry("500x550")
-        group = Label(main_window, text="Group: Bind Gerald, Leibrecht Markus, Zachner Roman",)
+        group = Label(main_window, text="Jahrgang: BWI15",)
         group.pack()
         description = Label(main_window, text="Description: Each device(Pi) in the Network will be listed here!\n"
-                                          "If a device(Pi) entry or loss the list will be changed!\n"
-                                          "There is also a master election under the devices(Pi's)!\n"
-                                          "Communication exists throw Network Ping's!\n",)
+                                          "If a device (Pi) entry or loss the list will be changed!\n"
+                                          "There is also a master election under the devices(Pis)!\n",)
         description.pack()
         self.master = StringVar()
         Label(main_window, textvariable=self.master).pack()
@@ -27,7 +28,7 @@ class MainWindow(object):
         self.ip_address_list_box = Listbox(main_window, width=70, height=20)
         self.ip_address_list_box.pack()
 
-        self.startBtn = Button(main_window, text="Start", command=self.client_search_func)
+        self.startBtn = Button(main_window, text="Start", command=self.client_search_callback)
         self.startBtn.pack()
 
         self.state = StringVar()
@@ -39,9 +40,9 @@ class MainWindow(object):
     def show(self):
         self.main_window.mainloop()
 
-
     def _on_closing(self):
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            self.app_close_callback()
             self.main_window.destroy()
 
     def update_list_box(self, list_of_ip_addresses):
