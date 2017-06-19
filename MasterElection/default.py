@@ -15,17 +15,15 @@ def hold_master_election(network_nodes):
         return ('', None)
 
     lowest_addr = ('999.999.999.999', None)
-    print(network_nodes)
+    debug_print("Electing master amongst the following peers:")
+    debug_print('['+', '.join([n[0] for n in network_nodes])+']')
     for ip, port in network_nodes:
-        print(ip, lowest_addr[0], ip_to_int(ip), ip_to_int(lowest_addr[0]), ip_to_int(ip) < ip_to_int(lowest_addr[0]))
         if ip_to_int(ip) < ip_to_int(lowest_addr[0]):
             lowest_addr = (ip, port)
-            print('lowest ip now: {}'.format(lowest_addr[0]))
     return lowest_addr
 
 
 # helper funcs
 def ip_to_int(ip):
     ip_int = re.sub('\.', '', ip)
-    print(ip_int)
     return int(ip_int)

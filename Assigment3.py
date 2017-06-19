@@ -19,6 +19,7 @@ class App(object):
     def __init__(self):
         self.know_network_nodes = []
         self.peer_sync_interval = PEER_SYNC_INTERVAL
+        self.peer_sync_active = False
         self.port = DEFAULT_APPLICATION_PORT
 
     def start(self):
@@ -32,14 +33,16 @@ class App(object):
     def start_communication(self):
         self.rcv.start_listening()
         # start checking if nodes are still there
+        self.peer_sync_active = True
         self._ping_peer_thread = threading.Thread(target=self.schedule_peer_ping_sync)
         self._ping_peer_thread.setDaemon(True)
         self._ping_peer_thread.start()
 
     def stop_communication(self):
         self.rcv.stop_listening()
-        if getattr(self, '_ping_peer_thread'):
-            self._ping_peer_thread.join()
+        if getattr(self, '_ping_peer_thread', None):
+            self.peer_sync_active = False
+            self._ping_peer_thread.join(0)
 
     def stop(self):
         self.snd.terminate()
@@ -60,20 +63,20 @@ class App(object):
         if not interval:
             interval = self.peer_sync_interval
 
-        while True:
-            debug_print('Network Node Sync: PRE')
+        while self.peer_sync_active:
             self.do_peer_ping_sync()
             debug_print('Network Node Sync: Next sync in {} seconds'.format(interval))
             time.sleep(interval)
 
     def do_peer_ping_sync(self):
         debug_print('Network Node Sync: Started')
-
-        self.know_network_nodes = []
+        previously_know_network_nodes = self.know_network_nodes.copy()
         self.snd.send(SYNC_REQUEST_MSG)
         time.sleep(PEER_SYNC_TIMEOUT)  # give peers 10 secs to resp
+
+        self.know_network_nodes = [n for n in previously_know_network_nodes]
         for node in self.know_network_nodes:
-            self.update_peers_and_inform_gui(node[0], node[1])
+            self.update_peers_and_inform_gui('add', node)
         debug_print('Network Node Sync: Finished')
 
     def resp_to_ping_sync(self):
@@ -90,7 +93,7 @@ class App(object):
     def process_incoming_message(self, msg, addr):
         if msg == GOODBYE_MSG:
             self.update_peers_and_inform_gui('remove', addr)
-        else:
+        if msg != SYNC_REQUEST_MSG:
             self.update_peers_and_inform_gui('add', addr)
 
         if msg == SYNC_REQUEST_MSG:
