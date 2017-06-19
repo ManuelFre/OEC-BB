@@ -4,10 +4,10 @@ from tkinter import messagebox
 
 
 class MainWindow(object):
-    def __init__(self, listener_start_callback, listener_stop_callback, app_close_callback):
+    def __init__(self, com_start_callback, com_stop_callback, app_close_callback):
         # callback functions 
-        self.listener_start_callback = listener_start_callback
-        self.listener_stop_callback = listener_stop_callback
+        self.com_start_callback = com_start_callback
+        self.com_stop_callback = com_stop_callback
         self.app_close_callback = app_close_callback
         self.main_window = self._create_window()
 
@@ -15,7 +15,7 @@ class MainWindow(object):
         main_window = Tk()
         main_window.title("Assignment3")
         main_window.geometry("500x550")
-        group = Label(main_window, text="Jahrgang: BWI15",)
+        group = Label(main_window, text="Jahrgang: BWI15-BB",)
         group.pack()
         description = Label(main_window, text="Description: Each device(Pi) in the Network will be listed here!\n"
                                           "If a device (Pi) entry or loss the list will be changed!\n"
@@ -24,13 +24,18 @@ class MainWindow(object):
         self.master = StringVar()
         Label(main_window, textvariable=self.master).pack()
         self.master.set("Master: ")
+
+        self.own_ip = StringVar()
+        Label(main_window, textvariable=self.own_ip).pack()
+        self.own_ip.set("Own IP: ")
+
         self.ip_address_list_box = Listbox(main_window, width=70, height=20)
         self.ip_address_list_box.pack()
 
-        self.startBtn = Button(main_window, text="Start Listener", command=self.listener_start_callback)
+        self.startBtn = Button(main_window, text="Start Com", command=self.com_start_callback)
         self.startBtn.pack()
 
-        self.stopBtn = Button(main_window, text="Stop Listener", command=self.listener_stop_callback)
+        self.stopBtn = Button(main_window, text="Stop Com", command=self.com_stop_callback)
         self.stopBtn.pack()
 
         self.state = StringVar()
@@ -54,6 +59,9 @@ class MainWindow(object):
 
     def update_master(self, master_ip_addr=None):
         self.master.set("Master: {}".format(master_ip_addr or ''))
+
+    def update_own_ip(self, ip_addr=None):
+        self.own_ip.set("Own IP: {}".format(ip_addr or ''))
 
     def make_state_active(self, stateMessage, time_to_show=3):
         self.state.set(stateMessage)

@@ -46,8 +46,5 @@ class MessageRCV(object):
 
     def _listen_for_broadcasts(self):
         while not self._stop.is_set():
-            debug_print("listen")
             message, address = self._server_socket.recvfrom(512)
             self.message_callback_func(message.decode(), address)
-            debug_print('message (%s) from : %s' % (str(message), address[0]))
-
