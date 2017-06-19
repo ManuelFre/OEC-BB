@@ -10,7 +10,10 @@ def hold_master_election(network_nodes):
     :param network_nodes (list of tuples): eg ('192.168.1.4', 23423)
     :return master_address: ('192.168.1.4', 23423)
     """
-    
+
+    if not network_nodes:
+        return ('', None)
+
     lowest_addr = ('999.999.999.999', None)
     print(network_nodes)
     for ip, port in network_nodes:
