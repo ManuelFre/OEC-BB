@@ -7,28 +7,37 @@ from GUI.gui import MainWindow
 from MasterElection.default import hold_master_election
 from Config.settings import *
 from Misc.helpers import debug_print
+import threading
 
 # TODO:
 # schönere art master election zu definieren
 # doc
+# all constants in init
 
 
 class App(object):
     def __init__(self):
         self.know_network_nodes = []
+        self.peer_sync_interval = PEER_SYNC_INTERVAL
+        self.port = DEFAULT_APPLICATION_PORT
 
     def start(self):
-        self.snd = SubnetBroadcaster(DEFAULT_APPLICATION_PORT, GOODBYE_MSG)
-        self.rcv = MessageRCV(self.process_incoming_message, DEFAULT_APPLICATION_PORT)
+        self.snd = SubnetBroadcaster(self.port, GOODBYE_MSG)
+        self.rcv = MessageRCV(self.process_incoming_message, self.port)
         self.window = MainWindow(listener_start_callback=self.rcv.start_listening, listener_stop_callback=self.rcv.stop_listening,
                             app_close_callback=self.stop)
         self.window.show()
 
-
+        # start checking if nodes are still there
+        self._ping_peer_thread = threading.Thread(target=self.schedule_peer_ping_sync)
+        self._ping_peer_thread.setDaemon(True)
+        self._ping_peer_thread.start()
 
     def stop(self):
         self.snd.terminate()
         self.rcv.stop_listening()
+        if self._ping_peer_thread:
+            self._ping_peer_thread.join()
 
     def update_known_peers(self, action, addr):
         if action.lower() == 'add':
@@ -40,6 +49,14 @@ class App(object):
             if addr in self.know_network_nodes:
                 debug_print("Node '{}' left!".format(addr[0]))
                 self.know_network_nodes.remove(addr)
+
+    def schedule_peer_ping_sync(self, interval=None):
+        if not interval:
+            interval = self.peer_sync_interval
+
+        while True:
+            self.do_peer_ping_sync()
+            time.sleep(interval)
 
     def do_peer_ping_sync(self):
         debug_print('Network Node Sync: Started')

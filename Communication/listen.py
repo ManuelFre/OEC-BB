@@ -13,17 +13,17 @@ class MessageRCV(object):
 
         self.message_callback_func = message_callback_func
 
-        self.do_listen = False
+        self.is_listening = False
 
     def start_listening(self):
-        if not self.do_listen:
+        if not self.is_listening:
             debug_print('Listener: Starting service ...')
             self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self._server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self._server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             self._server_socket.bind(('', self.port))
 
-            self.do_listen = True
+            self.is_listening = True
             self._server_thread = threading.Thread(target=self._listen_for_broadcasts)
             self._server_thread.setDaemon(True)
             self._server_thread.start()
@@ -33,11 +33,11 @@ class MessageRCV(object):
             debug_print('Listener: Service already running. Nothing was started.')
 
     def stop_listening(self):
-        if self.do_listen:
+        if self.is_listening:
             debug_print("Listener: Stopping service ...")
             self._stop.set()
             self._server_thread.join(timeout=0)
-            self.do_listen = False
+            self.is_listening = False
             self._server_socket.close()
             debug_print("Listener: Stopped")
 
