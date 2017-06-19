@@ -50,8 +50,7 @@ class MainWindow(object):
     def update_list_box(self, list_of_ip_addresses):
         self.ip_address_list_box.delete(0, END)
         for idx, ip in enumerate(list_of_ip_addresses):
-            # TODO: String formatting
-            self.ip_address_list_box.insert(END, "Rank " + str(idx) + ":          " + ip)
+            self.ip_address_list_box.insert(END, "Node {}:          {}".format(idx, ip))
 
     def update_master(self, master_ip_addr=None):
         self.master.set("Master: {}".format(master_ip_addr or ''))
@@ -63,6 +62,5 @@ class MainWindow(object):
 
     def update_window_by_ip_list(self, list_of_peer_ips):
         self.update_list_box(list_of_peer_ips)
-        print("Actuelly list of IPs in the Network: " + str(list_of_peer_ips))
 
 

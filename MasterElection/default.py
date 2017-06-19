@@ -1,5 +1,5 @@
 import re
-import sys
+from Misc.helpers import debug_print
 
 
 def hold_master_election(network_nodes):
@@ -17,13 +17,15 @@ def hold_master_election(network_nodes):
     lowest_addr = ('999.999.999.999', None)
     print(network_nodes)
     for ip, port in network_nodes:
-        print(ip)
-        print(port)
+        print(ip, lowest_addr[0], ip_to_int(ip), ip_to_int(lowest_addr[0]), ip_to_int(ip) < ip_to_int(lowest_addr[0]))
         if ip_to_int(ip) < ip_to_int(lowest_addr[0]):
             lowest_addr = (ip, port)
+            print('lowest ip now: {}'.format(lowest_addr[0]))
     return lowest_addr
 
 
 # helper funcs
 def ip_to_int(ip):
-    return re.sub('\.', '', ip)
+    ip_int = re.sub('\.', '', ip)
+    print(ip_int)
+    return int(ip_int)
