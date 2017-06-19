@@ -33,12 +33,12 @@ class MessageRCV(object):
 
     def stop_listening(self):
         if self.do_listen:
-            print("Listen: Stopping service ...")
+            print("Listener: Stopping service ...")
             self._stop.set()
             self._server_thread.join(timeout=0)
             self.do_listen = False
             self._server_socket.close()
-            print("Listen: Stopped")
+            print("Listener: Stopped")
 
         else:
             print("Listener: Service wasn't running. Nothing to stop.")

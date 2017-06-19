@@ -28,6 +28,9 @@ class SubnetBroadcaster(object):
         target = ('<broadcast>', self.listener_port)
         self.broadcast_socket.sendto(msg.encode(), target)
 
+    def terminate(self):
+        self.send_goodbye_msg()
+        self._destroy_broadcast_socket()
     def send_goodbye_msg(self):
         self.send(self.GOODBYE_MSG)
 

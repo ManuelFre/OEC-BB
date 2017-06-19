@@ -1,14 +1,13 @@
 import time
 from tkinter import *
 from tkinter import messagebox
-from operator import itemgetter
 
 
 class MainWindow(object):
-    def __init__(self, server_start_callback, client_search_callback, app_close_callback):
+    def __init__(self, listener_start_callback, listener_stop_callback, app_close_callback):
         # callback functions 
-        self.server_start_callback = server_start_callback
-        self.client_search_callback = client_search_callback
+        self.listener_start_callback = listener_start_callback
+        self.listener_stop_callback = listener_stop_callback
         self.app_close_callback = app_close_callback
         self.main_window = self._create_window()
 
@@ -28,8 +27,11 @@ class MainWindow(object):
         self.ip_address_list_box = Listbox(main_window, width=70, height=20)
         self.ip_address_list_box.pack()
 
-        self.startBtn = Button(main_window, text="Start", command=self.client_search_callback)
+        self.startBtn = Button(main_window, text="Start Listener", command=self.listener_start_callback)
         self.startBtn.pack()
+
+        self.stopBtn = Button(main_window, text="Stop Listener", command=self.listener_stop_callback)
+        self.stopBtn.pack()
 
         self.state = StringVar()
         Label(main_window, textvariable=self.state).pack()
