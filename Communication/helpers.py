@@ -16,6 +16,7 @@ def get_ip_address(ifname):
 def get_ip_address_ifconfig(interface):
     myaddress = subprocess.getoutput("/sbin/ifconfig %s" % interface)\
                 .split("\n")[1].split()[1][5:]
+    myaddress.replace('se:', '')  # can happen depending on os lang
     if myaddress == "CAST":
         print("Please Confirm that your Network Device is Configured")
         sys.exit()
