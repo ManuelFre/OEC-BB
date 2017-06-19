@@ -24,20 +24,26 @@ class App(object):
     def start(self):
         self.snd = SubnetBroadcaster(self.port, GOODBYE_MSG)
         self.rcv = MessageRCV(self.process_incoming_message, self.port)
-        self.window = MainWindow(listener_start_callback=self.rcv.start_listening, listener_stop_callback=self.rcv.stop_listening,
-                            app_close_callback=self.stop)
+        self.window = MainWindow(listener_start_callback=self.start_communication,
+                                 listener_stop_callback=self.stop_communication,
+                                 app_close_callback=self.stop)
         self.window.show()
 
+    def start_communication(self):
+        self.rcv.start_listening()
         # start checking if nodes are still there
         self._ping_peer_thread = threading.Thread(target=self.schedule_peer_ping_sync)
         self._ping_peer_thread.setDaemon(True)
         self._ping_peer_thread.start()
 
-    def stop(self):
-        self.snd.terminate()
+    def stop_communication(self):
         self.rcv.stop_listening()
         if getattr(self, '_ping_peer_thread'):
             self._ping_peer_thread.join()
+
+    def stop(self):
+        self.snd.terminate()
+        self.rcv.stop_listening()
 
     def update_known_peers(self, action, addr):
         if action.lower() == 'add':
