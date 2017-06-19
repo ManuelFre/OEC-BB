@@ -15,7 +15,7 @@ class SubnetBroadcaster(object):
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):
-        self._destroy_broadcast_socket()
+        self.terminate()
 
     def _make_broadcast_socket(self):
         self.broadcast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -28,9 +28,10 @@ class SubnetBroadcaster(object):
         target = ('<broadcast>', self.listener_port)
         self.broadcast_socket.sendto(msg.encode(), target)
 
-    def terminate(self):
+    def terminate(self):  # use this func if you dont use a with statement
         self.send_goodbye_msg()
         self._destroy_broadcast_socket()
+
     def send_goodbye_msg(self):
         self.send(self.GOODBYE_MSG)
 
