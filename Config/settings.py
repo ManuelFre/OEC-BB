@@ -7,5 +7,5 @@ SYNC_AKN_MSG = SYNC_REQUEST_MSG + '_akn'
 RASPBERRY_WIFI_INTERFACE = "wlan0"
 MASTERELECTION = 'default'
 PEER_SYNC_TIMEOUT = 10  # give peers & network x seconds time to respond
-PEER_SYNC_INTERVAL = 60  # run a peer update every x seconds
+PEER_SYNC_INTERVAL = 20  # run a peer update every x seconds
 DEBUG_PRINT = True

@@ -36,7 +36,7 @@ class App(object):
     def stop(self):
         self.snd.terminate()
         self.rcv.stop_listening()
-        if self._ping_peer_thread:
+        if getattr(self, '_ping_peer_thread'):
             self._ping_peer_thread.join()
 
     def update_known_peers(self, action, addr):
@@ -55,7 +55,9 @@ class App(object):
             interval = self.peer_sync_interval
 
         while True:
+            debug_print('Network Node Sync: PRE')
             self.do_peer_ping_sync()
+            debug_print('Network Node Sync: Next sync in {} seconds'.format(interval))
             time.sleep(interval)
 
     def do_peer_ping_sync(self):
