@@ -23,7 +23,10 @@ class App(object):
         self.peer_sync_interval = PEER_SYNC_INTERVAL
         self.peer_sync_active = False
         self.port = DEFAULT_APPLICATION_PORT
-        self.own_ip = get_ip_address('wlp2s0') #RASPBERRY_WIFI_INTERFACE)
+        try:
+            self.own_ip = get_ip_address(RASPBERRY_WIFI_INTERFACE)
+        except:
+            self.own_ip = get_ip_address('wlp2s0')
 
     def start(self):
         self.snd = SubnetBroadcaster(self.port, GOODBYE_MSG)
@@ -67,8 +70,6 @@ class App(object):
         self.snd.send(SYNC_REQUEST_MSG)
         time.sleep(PEER_SYNC_TIMEOUT)  # give peers 10 secs to resp
         self.know_network_nodes = []
-        print("BUFFER")
-        print(self.peer_sync_node_buffer)
         for node in self.peer_sync_node_buffer:
             self.update_known_peers_and_inform_gui('add', node)
         debug_print('Network Node Sync: Finished')
@@ -78,10 +79,8 @@ class App(object):
 
     def update_known_peers(self, action, addr, node_list_used=None):
         if node_list_used is None:
-            print("WAS NONE")
             node_list_used = self.know_network_nodes
 
-        print(node_list_used)
         if action.lower() == 'add':
             if addr not in node_list_used:
                 debug_print("Node '{}' joined!".format(addr[0]))
@@ -91,13 +90,6 @@ class App(object):
             if addr in node_list_used:
                 debug_print("Node '{}' left!".format(addr[0]))
                 node_list_used.remove(addr)
-
-        print(node_list_used)
-        print("used standard list: ")
-        if node_list_used:
-            print("YES")
-        else:
-            print("NO")
 
     def update_known_peers_and_inform_gui(self, action, addr, node_list_used=None):
         if node_list_used is None:
@@ -118,7 +110,6 @@ class App(object):
             if msg == GOODBYE_MSG:
                 self.update_known_peers_and_inform_gui('remove', addr)
             elif msg == SYNC_AKN_MSG:
-                print("AKT")
                 self.update_known_peers('add', addr, node_list_used=self.peer_sync_node_buffer)
             elif msg == SYNC_REQUEST_MSG:
                 self.resp_to_ping_sync()
