@@ -13,10 +13,6 @@ from Misc.helpers import debug_print
 from datetime import datetime as dt
 
 
-# known bugs
-# see README.md
-
-
 class App(object):
     """ This is the app. It combines and orchestrates all other app components. """
 

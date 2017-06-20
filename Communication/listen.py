@@ -13,7 +13,6 @@ class MessageRCV(object):
     def __init__(self, message_callback_func, port):
         self.port = port
 
-        self._stop = threading.Event()
         self._server_thread = None
         self._server_socket = None
 
@@ -25,6 +24,8 @@ class MessageRCV(object):
         """ Starts a (threaded) listener function. """
         if not self.is_listening:
             debug_print('Listener: Starting service ...')
+            self._stop = threading.Event()
+
             self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self._server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self._server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
