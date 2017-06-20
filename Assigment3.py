@@ -37,7 +37,6 @@ class App(object):
         self.window.update_own_ip(self.own_ip)
         self.window.show()
 
-
     def stop(self):
         """ Stop this app. """
         self.snd.terminate()
