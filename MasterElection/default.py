@@ -3,14 +3,14 @@ from Misc.helpers import debug_print
 
 
 def hold_master_election(network_nodes):
-    """
-    This is the default master election algorithm.
+    """ This is the default master election algorithm.
     The addr with the 'lowest ip' will be considered master.
 
-    :param network_nodes (list of tuples): eg ('192.168.1.4', 23423)
-    :return master_address: ('192.168.1.4', 23423)
-    """
+    Args:
+        network_nodes (list of tuples): eg ('192.168.1.4', 23423)
 
+    Returns (tuple): master_address. eg ('192.168.1.4', 23423)
+    """
     if not network_nodes:
         return ('', None)
 
@@ -25,5 +25,6 @@ def hold_master_election(network_nodes):
 
 # helper funcs
 def ip_to_int(ip):
+    """ Cast ip string to int """
     ip_int = re.sub('\.', '', ip)
     return int(ip_int)

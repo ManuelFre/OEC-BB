@@ -2,8 +2,8 @@ from operator import itemgetter
 
 
 def hold_master_election(network_nodes):
-    """
-    This is a untested reconstruction of the original master election algorithm.
+    """ This is a UNTESTED reconstruction of the original master election algorithm.
+    Here for reference only!
     """
     list_for_sorting = []
     for ip_addr, port in network_nodes:

@@ -4,6 +4,12 @@ from Misc.helpers import debug_print
 
 
 class MessageRCV(object):
+    """ This class is used to receive messages send by the broadcaster.
+
+    Args:
+        message_callback_func (func pointer): func to call when a msg was received
+        port (int): Port the app uses to communicate with peers
+    """
     def __init__(self, message_callback_func, port):
         self.port = port
 
@@ -16,6 +22,7 @@ class MessageRCV(object):
         self.is_listening = False
 
     def start_listening(self):
+        """ Starts a (threaded) listener function. """
         if not self.is_listening:
             debug_print('Listener: Starting service ...')
             self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -33,6 +40,7 @@ class MessageRCV(object):
             debug_print('Listener: Service already running. Nothing was started.')
 
     def stop_listening(self):
+        """ Stoppes the threaded listener function. """
         if self.is_listening:
             debug_print("Listener: Stopping service ...")
             self._stop.set()
@@ -45,6 +53,7 @@ class MessageRCV(object):
             debug_print("Listener: Service wasn't running. Nothing to stop.")
 
     def _listen_for_broadcasts(self):
+        """ Listenes for broadcasts and sends them to the msg received callback func. """
         while not self._stop.is_set():
             message, address = self._server_socket.recvfrom(512)
             self.message_callback_func(message.decode(), address)
