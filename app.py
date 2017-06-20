@@ -12,8 +12,9 @@ from MasterElection.default import hold_master_election
 from Misc.helpers import debug_print
 from datetime import datetime as dt
 
-# TODO:
-# all constants in init
+
+# known bugs
+# see README.md
 
 
 class App(object):
@@ -23,6 +24,7 @@ class App(object):
         self.know_network_nodes = {}
         self.peer_sync_interval = PEER_SYNC_INTERVAL
         self.peer_sync_active = False
+        self.listen_state_on = False
         self.port = DEFAULT_APPLICATION_PORT
         self.own_ip = ''
 
@@ -47,19 +49,24 @@ class App(object):
 
     def start_communication(self):
         """ Start listening to and for peers. Start threaded peer sync. """
-        self.rcv.start_listening()
-        # start checking if nodes are still there
-        self.peer_sync_active = True
-        self._ping_peer_thread = threading.Thread(target=self.schedule_peer_ping_sync)
-        self._ping_peer_thread.setDaemon(True)
-        self._ping_peer_thread.start()
+        if not self.rcv.is_listening:
+            self.rcv.start_listening()
+            self.peer_sync_active = True
+            self._ping_peer_thread = threading.Thread(target=self.schedule_peer_ping_sync)
+            self._ping_peer_thread.setDaemon(True)
+            self._ping_peer_thread.start()
+        else:
+            debug_print("Listener: Already running! Nothing started!")
 
     def stop_communication(self):
         """ Stop listening to and for peers. Stop threaded peer sync. """
-        self.rcv.stop_listening()
-        if getattr(self, '_ping_peer_thread', None):
-            self.peer_sync_active = False
-            self._ping_peer_thread.join(0)
+        if self.rcv.is_listening:
+            self.rcv.stop_listening()
+            if getattr(self, '_ping_peer_thread', None):
+                self.peer_sync_active = False
+                self._ping_peer_thread.join(0)
+        else:
+            debug_print("Listener: Wasn't running! Nothing stopped!")
 
     def schedule_peer_ping_sync(self, interval=None):
         """ Run a search for active peers every x seconds.
@@ -99,12 +106,17 @@ class App(object):
     def update_known_peers(self, action, addr):
         """ Updates a peer list by adding/removing the given addr.
         Basic error treatment makes sure that addresses are unique per list.
+
         Args:
             action: 'add' or 'remove'
             addr (tuple): (ip, port)
         """
         peer_ip = addr[0]
         peer_port = addr[1]
+
+        if peer_ip == self.own_ip:
+            return
+
         if action.lower() == 'add':
             if not self.know_network_nodes.get(peer_ip, None):
                 debug_print("Node '{}' joined!".format(peer_ip))
@@ -142,6 +154,7 @@ class App(object):
             elif msg == SYNC_AKN_MSG:
                 self.update_known_peers_and_inform_gui('add', addr)
             elif msg == SYNC_REQUEST_MSG:
+                self.update_known_peers_and_inform_gui('add', addr)
                 self.resp_to_ping_sync()
             else:
                 self.update_known_peers_and_inform_gui('add', addr)
