@@ -31,11 +31,12 @@ class App(object):
         self.window = MainWindow(com_start_callback=self.start_communication,
                                  com_stop_callback=self.stop_communication,
                                  app_close_callback=self.stop)
-        self.window.update_own_ip(self.own_ip)
-        self.window.show()
 
         own_ip_func = getattr(helpers, GET_OWN_IP_FUNC)  # get the right func dynamically
         self.own_ip = own_ip_func()
+        self.window.update_own_ip(self.own_ip)
+        self.window.show()
+
 
     def stop(self):
         """ Stop this app. """
