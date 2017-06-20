@@ -1,6 +1,7 @@
 #Pycharm Stuff
 Assignment3_*
 Assignment3_.idea_Assignment3.iml
+.idea/*
 
 # Sublime Stuff
 *.sublime-project
@@ -10,5 +11,3 @@ Assignment3_.idea_Assignment3.iml
 __pycache__/
 *.py[cod]
 *$py.class
-
-MYFILE
