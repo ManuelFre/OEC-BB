@@ -66,15 +66,15 @@ class MainWindow(object):
             self.app_close_callback()
             self.main_window.destroy()
 
-    def update_window_by_ip_list(self, ip_addresses):
+    def update_window_by_ip_list(self, nodes):
         """ Takes a list of ips and shows displays them on the window.
         Args:
-            ip_addresses (list of str): ip addresses
+            nodes (list of NetworkNode): ip addresses
         """
 
         self.ip_address_list_box.delete(0, END)
-        for idx, ip in enumerate(ip_addresses):
-            self.ip_address_list_box.insert(END, "Node {}:          {}".format(idx, ip))
+        for idx, node in enumerate(nodes):
+            self.ip_address_list_box.insert(END, "Node {idx:02d}:{n.ip: >16}:{n.port} {n.banner}".format(idx=idx, n=node))
 
     def update_master(self, master_ip_addr=None):
         """ Displays a given ip as master. Empty param. can be used to reset it.

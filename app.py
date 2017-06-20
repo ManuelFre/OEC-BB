@@ -1,24 +1,26 @@
 #!/usr/bin/env python3
+import threading
 import time
 
-from Communication.listen import MessageRCV
-from Communication.broadcast import SubnetBroadcaster
 from Communication import helpers
+from Communication.broadcast import SubnetBroadcaster
+from Communication.listen import MessageRCV
+from Communication.peers import NetworkNode
+from Config.settings import *
 from GUI.gui import MainWindow
 from MasterElection.default import hold_master_election
-from Config.settings import *
 from Misc.helpers import debug_print
-import threading
+from datetime import datetime as dt
 
 # TODO:
 # all constants in init
 
 
 class App(object):
-    """ This is the app. It combines and orchistrates all other app components. """
+    """ This is the app. It combines and orchestrates all other app components. """
+
     def __init__(self):
-        self.know_network_nodes = []
-        self.peer_sync_node_buffer = []
+        self.know_network_nodes = {}
         self.peer_sync_interval = PEER_SYNC_INTERVAL
         self.peer_sync_active = False
         self.port = DEFAULT_APPLICATION_PORT
@@ -34,6 +36,7 @@ class App(object):
 
         own_ip_func = getattr(helpers, GET_OWN_IP_FUNC)  # get the right func dynamically
         self.own_ip = own_ip_func()
+        self.know_network_nodes[self.own_ip] = NetworkNode(self.own_ip, DEFAULT_APPLICATION_PORT, banner='*')
         self.window.update_own_ip(self.own_ip)
         self.window.show()
 
@@ -78,51 +81,51 @@ class App(object):
         Notes: THIS IS A BLOCKING CALL. Use threading.
         """
         debug_print('Network Node Sync: Started')
-        self.peer_sync_node_buffer = []
         self.snd.send(SYNC_REQUEST_MSG)
-        time.sleep(PEER_SYNC_TIMEOUT)  # give peers 10 secs to resp
-        self.know_network_nodes = []
-        for node in self.peer_sync_node_buffer:
-            self.update_known_peers_and_inform_gui('add', node)
+        timestamp = dt.utcnow()
+        time.sleep(PEER_SYNC_TIMEOUT)  # give peers x secs to resp
+        # create a list of peers that responded after the timestamp
+        peers_alive = [node for node in self.know_network_nodes.values() if node.last_seen > timestamp]
+        # create a list of peers that are currently displayed but not online anymore
+        peers_offline = [node for node in self.know_network_nodes.values() if node not in peers_alive]
+        for node in peers_offline:
+            self.update_known_peers_and_inform_gui('remove', (node.ip, node.port))
         debug_print('Network Node Sync: Finished')
 
     def resp_to_ping_sync(self):
         """ Respond to a peer sync request. """
         self.snd.send(SYNC_AKN_MSG)
 
-    def update_known_peers(self, action, addr, node_list_used=None):
+    def update_known_peers(self, action, addr):
         """ Updates a peer list by adding/removing the given addr.
         Basic error treatment makes sure that addresses are unique per list.
-
         Args:
             action: 'add' or 'remove'
             addr (tuple): (ip, port)
-            node_list_used (list_pointer): switch used to determin which list is updated
         """
-        if node_list_used is None:
-            node_list_used = self.know_network_nodes
-
+        peer_ip = addr[0]
+        peer_port = addr[1]
         if action.lower() == 'add':
-            if addr not in node_list_used:
-                debug_print("Node '{}' joined!".format(addr[0]))
-                node_list_used.append(addr)
+            if not self.know_network_nodes.get(peer_ip, None):
+                debug_print("Node '{}' joined!".format(peer_ip))
+                self.know_network_nodes[peer_ip] = NetworkNode(peer_ip, peer_port)
+            else:
+                debug_print("Node '{}' was seen!".format(peer_ip))
+                self.know_network_nodes[peer_ip].last_seen = dt.utcnow()
 
         if action.lower() == 'remove':
-            if addr in node_list_used:
-                debug_print("Node '{}' left!".format(addr[0]))
-                node_list_used.remove(addr)
+            if self.know_network_nodes.get(peer_ip, None):
+                debug_print("Node '{}' left!".format(peer_ip))
+                del self.know_network_nodes[peer_ip]
 
-    def update_known_peers_and_inform_gui(self, action, addr, node_list_used=None):
+    def update_known_peers_and_inform_gui(self, action, addr):
         """ Same as 'update_known_peers' but also updates the GUI. """
-        if node_list_used is None:
-            node_list_used = self.know_network_nodes
 
-        self.update_known_peers(action, addr, node_list_used)
-        master_addr = hold_master_election(node_list_used)
-        master_ip = master_addr[0]
-        node_ips = [node_addr[0] for node_addr in node_list_used]
-        self.window.update_window_by_ip_list(node_ips)
-        self.window.update_master(master_ip)
+        self.update_known_peers(action, addr)
+        known_node_ips = [node for node in self.know_network_nodes.values()]
+        master_node = hold_master_election(known_node_ips)
+        self.window.update_window_by_ip_list(known_node_ips)
+        self.window.update_master(master_node.ip)
 
     def process_incoming_message(self, msg, addr):
         """ This function processes all incoming messages and starts the appropriate actions.
@@ -137,14 +140,15 @@ class App(object):
             if msg == GOODBYE_MSG:
                 self.update_known_peers_and_inform_gui('remove', addr)
             elif msg == SYNC_AKN_MSG:
-                self.update_known_peers('add', addr, node_list_used=self.peer_sync_node_buffer)
+                self.update_known_peers_and_inform_gui('add', addr)
             elif msg == SYNC_REQUEST_MSG:
                 self.resp_to_ping_sync()
             else:
                 self.update_known_peers_and_inform_gui('add', addr)
 
             self.window.make_state_active(full_str)
-
+        else:
+            self.update_known_peers('add', addr)
 
 if __name__ == '__main__':
     """
@@ -153,5 +157,3 @@ if __name__ == '__main__':
     debug_print('Let\'s do this.')
     app = App()
     app.start()
-
-
