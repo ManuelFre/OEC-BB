@@ -44,12 +44,11 @@ class MessageRCV(object):
         """ Stoppes the threaded listener function. """
         if self.is_listening:
             debug_print("Listener: Stopping service ...")
+            self.is_listening = False
             self._stop.set()
             self._server_thread.join(timeout=0)
-            self.is_listening = False
             """self._server_socket.shutdown(socket.SHUT_RDWR)"""
             self._server_socket.close()
-
             debug_print("Listener: Stopped")
 
         else:
