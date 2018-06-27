@@ -1,4 +1,4 @@
-import socket 
+import socket
 
 
 class SubnetBroadcaster(object):
@@ -10,6 +10,7 @@ class SubnetBroadcaster(object):
         listener_port (int): Port the app uses to communicate with peers
         GOODBYE_MSG (str): msg send to signal that this app is leaving the network (in a regular way)
     """
+
     def __init__(self, listener_port, goodbye_msg):
         self.listener_port = listener_port
         self.GOODBYE_MSG = goodbye_msg
@@ -21,7 +22,7 @@ class SubnetBroadcaster(object):
         """ Used by context manager ONLY! """
         self._make_broadcast_socket()
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         """ Used by context manager ONLY! """
         self.terminate()
@@ -29,7 +30,7 @@ class SubnetBroadcaster(object):
     def _make_broadcast_socket(self):
         """ Creates a broadcast socket. """
         self.broadcast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.broadcast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST,1)
+        self.broadcast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
     def _destroy_broadcast_socket(self):
         """ Destroys the broadcast socket. """

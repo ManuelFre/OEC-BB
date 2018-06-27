@@ -4,7 +4,7 @@ from Misc.helpers import debug_print
 
 
 class MessageRCV(object):
-    """ This class is used to receive messages send by the broadcaster.
+    """ This class is used to receive messages sent by the broadcaster.
 
     Args:
         message_callback_func (func pointer): func to call when a msg was received
@@ -47,7 +47,9 @@ class MessageRCV(object):
             self._stop.set()
             self._server_thread.join(timeout=0)
             self.is_listening = False
+            """self._server_socket.shutdown(socket.SHUT_RDWR)"""
             self._server_socket.close()
+
             debug_print("Listener: Stopped")
 
         else:
